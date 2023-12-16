@@ -70,15 +70,15 @@ function* addOne(_startValue,_endValue){
 
 const genAddOneFn = addOne(0,10);
 
-console.log("setting genAddOneFn");
-console.log(genAddOneFn);
+// console.log("setting genAddOneFn");
+// console.log(genAddOneFn);
 
-console.log("Calling next for the first time");
-console.log(`Calling next return value: ${genAddOneFn.next().value}`);
+// console.log("Calling next for the first time");
+// console.log(`Calling next return value: ${genAddOneFn.next().value}`);
 
-console.log("Calling next");
-console.log(`Calling next return value: ${genAddOneFn.next().value}`);
-console.log();
+// console.log("Calling next");
+// console.log(`Calling next return value: ${genAddOneFn.next().value}`);
+// console.log();
 
 /* .throw() can be changed to generator functiona  */
 
@@ -98,12 +98,12 @@ function* fetchRandomData(){
 
 const randomDataGenerator = fetchRandomData();
 
-console.log("fetching random data");
-console.log(randomDataGenerator.next());
-console.log(randomDataGenerator.next());
-randomDataGenerator.throw(new Error('An error has occured'));
-console.log(randomDataGenerator.next());
-console.log("");
+// console.log("fetching random data");
+// console.log(randomDataGenerator.next());
+// console.log(randomDataGenerator.next());
+// randomDataGenerator.throw(new Error('An error has occured'));
+// console.log(randomDataGenerator.next());
+// console.log("");
 
 /* Generator Composition */
 console.log("Generator Composition Example");
@@ -125,12 +125,12 @@ function* generateDataSequence(){
 }
 
 const genFnComposition = generateDataSequence();
-console.log(genFnComposition.next()); // A
-console.log(genFnComposition.next()); // B
-console.log(genFnComposition.next()); // C
-console.log(genFnComposition.next()); // 1
-console.log(genFnComposition.next()); // 3
-console.log(genFnComposition.next()); // 2
+// console.log(genFnComposition.next()); // A
+// console.log(genFnComposition.next()); // B
+// console.log(genFnComposition.next()); // C
+// console.log(genFnComposition.next()); // 1
+// console.log(genFnComposition.next()); // 3
+// console.log(genFnComposition.next()); // 2
 
 
 
@@ -153,3 +153,196 @@ async function* fetchItemsPerPage(){
     currentItem++;
   }
 }
+
+
+
+
+
+function zip(...arrays){
+  const maxLength = Math.max(...arrays.map(array => array.length));
+  return Array.from({length: maxLength}).map((_,i) => {
+    return Array.from({length:arrays.length},(_,j) => arrays[j][i]);
+  })
+}
+
+
+const zipExample = () => {
+
+  const xCoordinates = [1, 2, 3, 4];
+  const yCoordinates = [5, 6, 7, 8];
+  const zCoordinates = [3, 6, 1, 7];
+
+  const points = zip(xCoordinates,yCoordinates,zCoordinates);
+
+  console.log(points);
+
+}
+
+// zipExample();
+
+
+/* CUSTOM ITERABLE ITERATIONS */
+const cardDeck = {
+  suits: ["C", "D", "H", "S"],
+  court: ["J","Q","K","A"],
+  [Symbol.iterator]: function* () {
+    for (let suit of this.suits) {
+      for (let i = 2;i <=10; i++) yield suit + i;
+      for (let c of this.court) yield suit + c;
+    }
+  }
+}
+// console.log([...cardDeck]);
+
+
+
+/* LAZY EVALUATION OR INFINITE SEQUENCES */
+function* infinityAndBeyond(){
+  let i = 1;
+  while (true) {
+    yield i++;
+  }
+} 
+function* take(n,iterable){
+  for (let item of iterable){
+    if (n <= 0) return;
+    n--;
+    yield item;
+  }
+}
+function* map(iterable,fn) {
+  for (let item of iterable){
+    yield fn(item);
+  }
+}
+let taken = [...take(5,infinityAndBeyond())];
+let squares = [...take(9,map(infinityAndBeyond(),(x) => x * x))];
+
+// console.log(taken);
+// console.log(squares);
+
+
+/* RECURSIVE EXAMPLE */
+function binaryTreeNode(value){
+  let node = { value };
+  node[Symbol.iterator] = function* depthFirst(){
+    yield node.value;
+    if (node.leftChild) yield* node.leftChild;
+    if (node.rightChild) yield* node.rightChild;
+  }
+  return node;
+}
+const root = binaryTreeNode("root");
+root.leftChild = binaryTreeNode("branch left");
+root.rightChild = binaryTreeNode("branch right");
+root.leftChild.leftChild = binaryTreeNode("leaf L1");
+root.leftChild.rightChild = binaryTreeNode("leaf L2");
+root.rightChild.leftChild = binaryTreeNode("leaf R1");
+
+// console.log([...root]);
+
+
+const getSwapiPagerator = (endpoint) =>
+  async function* () {
+    let nextUrl = `https://swapi.dev/api/${endpoint}`;
+    while (nextUrl) {
+      const response = await fetch(nextUrl);
+      const data = await response.json();
+      nextUrl = data.next;
+      yield* data.results;
+    }
+  }
+  starWars = {
+    characters: {
+      [Symbol.asyncIterator]: getSwapiPagerator("people")
+    },
+    planets: {
+      [Symbol.asyncIterator]: getSwapiPagerator("planets")
+    },
+    ships: {
+      [Symbol.asyncIterator]: getSwapiPagerator("starships")
+    }
+  }
+
+  // (async function () {
+  //   const results = [];
+  //   for await (const page of starWars.ships) {
+  //     console.log(page.name);
+  //     results.push(page.name);
+  //     debugger;
+  //     yield results
+  //   }
+  // })();
+
+  
+  function* listener() {
+    console.log("listening...");
+    while (true) {
+      let msg = yield;
+      console.log('heard:', msg);
+    }
+  }
+  
+  let l = listener();
+  l.next('are you there?'); // listening...
+  l.next('how about now?'); // heard: how about now?
+  l.next('blah blah'); // heard: blah blah
+
+
+
+  function* bankAccount() {
+    let balance = 0;
+    while (balance >= 0){
+      balance += yield balance;
+    }
+    return "bankrupt";
+  }
+
+  let acct = bankAccount();
+  console.log(acct.next());
+  console.log(acct.next(50));
+  console.log(acct.next(-10));
+  console.log(acct.next(-60));
+
+
+
+
+  /* */
+  let players = {};
+  let queue = [];
+
+  function send(name,msg){
+    console.log(msg);
+    queue.push([name,msg]);
+  }
+
+  function run() {
+    while (queue.length) {
+      let [name,msg] = queue.shift();
+      players[name].next(msg);
+    }
+  }
+
+  function* knocker() {
+    send('asker','knock knock');
+    let question = yield;
+    if (question !== "who's there?") return;
+    send('asker','gene');
+    question = yield;
+    if (question !== "gene who?") return;
+    send('asker','generator!');
+  }
+
+  function* asker() {
+    let knock = yield;
+    if (knock !== 'knock knock') return;
+    send('knocker',"who's there?");
+    let answer = yield;
+    send('knocker', `${answer} who?`);
+  }
+
+  players.knocker = knocker();
+  players.asker = asker();
+  send('asker','ask get ready...');
+  send('knocker','knocker go!');
+  run();
