@@ -284,9 +284,9 @@ const getSwapiPagerator = (endpoint) =>
   }
   
   let l = listener();
-  l.next('are you there?'); // listening...
-  l.next('how about now?'); // heard: how about now?
-  l.next('blah blah'); // heard: blah blah
+  // l.next('are you there?'); // listening...
+  // l.next('how about now?'); // heard: how about now?
+  // l.next('blah blah'); // heard: blah blah
 
 
 
@@ -299,10 +299,10 @@ const getSwapiPagerator = (endpoint) =>
   }
 
   let acct = bankAccount();
-  console.log(acct.next());
-  console.log(acct.next(50));
-  console.log(acct.next(-10));
-  console.log(acct.next(-60));
+  // console.log(acct.next());
+  // console.log(acct.next(50));
+  // console.log(acct.next(-10));
+  // console.log(acct.next(-60));
 
 
 
@@ -341,8 +341,81 @@ const getSwapiPagerator = (endpoint) =>
     send('knocker', `${answer} who?`);
   }
 
-  players.knocker = knocker();
-  players.asker = asker();
-  send('asker','ask get ready...');
-  send('knocker','knocker go!');
-  run();
+  // players.knocker = knocker();
+  // players.asker = asker();
+  // send('asker','ask get ready...');
+  // send('knocker','knocker go!');
+  // run();
+
+
+
+/*  */
+const unit = v => new Promise(res => res(v));
+const fetchGenerator = function*(){
+  const response = yield fetch(`https://swapi.dev/api/people`);
+  const text = yield response.json();
+  console.log(text);
+}
+const autoRun = (iter, val = null) => {
+  const next = iter.next(val);
+  if (!next.done) {
+    next.value.then(result => autoRun(iter,result));
+  }
+}
+const promises = function* (){
+  console.log(yield unit("omg"));
+  console.log(yield unit("wtf"));
+  console.log(yield unit("bbq"));
+}
+// const promisesItr = promises();
+// promisesItr.next();
+// promisesItr.next("omg");
+// promisesItr.next("wtf");
+// promisesItr.next("bbq");
+// promisesItr.next("omg"); // nothing is output to the console
+// promisesItr.next("omg"); // nothing is output to the console
+// promisesItr.next("omg"); // nothing is output to the console
+// autoRun(promises());
+// autoRun(fetchGenerator());
+
+
+
+/* ASYNC GENERATOR EXAMPLE */
+
+function generatorAsync(genFn){
+  return function () {
+    const generator = genFn();
+
+    function resolve(next) {
+      if (next.done){
+        return Promise.resolve(next.value);
+      }
+
+      return Promise.resolve(next.value).then(response => {
+        return resolve(generator.next(response));
+      })
+    }
+
+    return resolve(generator.next());
+  }  
+}
+
+// normal fetch method async/await
+const asyncGetUsers = async function () {
+  const response = await fetch('https://jsonplaceholder.typicode.com/users');
+  const json = await response.json();
+
+  return json;
+}
+
+const generatorGetUsers = generatorAsync(function* (){
+  const response = yield fetch('https://jsonplaceholder.typicode.com/users');
+  const json = yield response.json()
+
+  return json;
+})
+
+console.log("Generator example");
+generatorGetUsers().then(response => console.log(response));
+console.log("Async/await example");
+asyncGetUsers().then(response => console.log(response));
